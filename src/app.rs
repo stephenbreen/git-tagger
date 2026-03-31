@@ -1,5 +1,6 @@
 use ratatui::widgets::ListState;
 use crate::git::{TagInfo, CommitInfo};
+use crate::config::Config;
 use git2::Repository;
 use semver::Version;
 
@@ -10,10 +11,11 @@ pub struct App {
     pub selected_base: Option<usize>,
     pub compare_mode: bool,
     pub commits_between: Vec<CommitInfo>,
+    pub config: Config,
 }
 
 impl App {
-    pub fn new(tags: Vec<TagInfo>) -> Self {
+    pub fn new(tags: Vec<TagInfo>, config: Config) -> Self {
         let mut app = Self {
             should_quit: false,
             list_state: ListState::default(),
@@ -21,6 +23,7 @@ impl App {
             selected_base: None,
             compare_mode: false,
             commits_between: Vec::new(),
+            config,
         };
         app.sort_by_date();
         if !app.tags.is_empty() {
@@ -125,7 +128,7 @@ mod tests {
             mock_tag("new", 1),
             mock_tag("mid", 5),
         ];
-        let mut app = App::new(tags);
+        let mut app = App::new(tags, Config::default());
         app.sort_by_date();
         assert_eq!(app.tags[0].name, "new");
         assert_eq!(app.tags[1].name, "mid");
@@ -139,7 +142,7 @@ mod tests {
             mock_tag("v1.10.0", 0),
             mock_tag("v1.2.1", 0),
         ];
-        let mut app = App::new(tags);
+        let mut app = App::new(tags, Config::default());
         app.sort_by_semver();
         assert_eq!(app.tags[0].name, "v1.10.0");
         assert_eq!(app.tags[1].name, "v1.2.1");
@@ -153,7 +156,7 @@ mod tests {
             mock_tag("2026.3.1-prod", 1),    // 1 day ago
             mock_tag("2026.3.41-staging", 0), // Today
         ];
-        let mut app = App::new(tags);
+        let mut app = App::new(tags, Config::default());
         
         // Test date sorting (newest first)
         app.sort_by_date();

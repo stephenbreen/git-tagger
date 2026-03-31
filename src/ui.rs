@@ -6,6 +6,7 @@ use ratatui::{
 };
 
 use crate::app::App;
+use crate::config::string_to_color;
 
 pub fn render(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
@@ -34,13 +35,15 @@ pub fn render(f: &mut Frame, app: &mut App) {
                 } else {
                     "    "
                 };
-                let style = if t.name.ends_with("-staging") {
-                    Style::default().fg(Color::Green)
-                } else if t.name.ends_with("-prod") || t.name.ends_with("-production") {
-                    Style::default().fg(Color::Red)
-                } else {
-                    Style::default()
-                };
+                
+                let mut style = Style::default();
+                for highlight in &app.config.highlights {
+                    if t.name.contains(&highlight.pattern) {
+                        style = style.fg(string_to_color(&highlight.color));
+                        break;
+                    }
+                }
+
                 ListItem::new(format!("{}{}({})", prefix, t.name, t.date.format("%Y-%m-%d")))
                     .style(style)
             })
@@ -64,10 +67,9 @@ pub fn render(f: &mut Frame, app: &mut App) {
         let mut text = format!("Comparing {} -> {}\n\nCommits:\n", base.name, target.name);
         for commit in &app.commits_between {
             text.push_str(&format!(
-                "{} - {} ({})\n",
+                "{} - {}\n",
                 &commit.id.to_string()[..7],
                 commit.message.lines().next().unwrap_or(""),
-                commit.author
             ));
         }
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Comparison"))
@@ -82,7 +84,6 @@ pub fn render(f: &mut Frame, app: &mut App) {
             tag.message.as_deref().unwrap_or("N/A")
         );
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Details"))
-
     } else {
         Paragraph::new("No tag selected").block(Block::default().borders(Borders::ALL).title("Details"))
     };

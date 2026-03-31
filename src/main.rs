@@ -10,13 +10,16 @@ use std::io;
 mod app;
 mod ui;
 mod git;
+mod config;
 
 use crate::app::App;
+use crate::config::Config;
 use git2::Repository;
 
 fn main() -> Result<()> {
     color_eyre::install()?;
 
+    let config = Config::load().unwrap_or_default();
     let repo = Repository::open(".").map_err(|e| {
         eprintln!("Error: Not a git repository or could not open: {}", e);
         e
@@ -31,7 +34,7 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     // Create app
-    let mut app = App::new(tags);
+    let mut app = App::new(tags, config);
 
     // Run app
     let res = run_app(&mut terminal, &mut app, &repo);

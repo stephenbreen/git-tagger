@@ -17,8 +17,11 @@ use git2::Repository;
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let repo = Repository::open(".")?;
-    let tags = git::list_tags(&repo)?;
+    let repo = Repository::open(".").map_err(|e| {
+        eprintln!("Error: Not a git repository or could not open: {}", e);
+        e
+    })?;
+    let tags = git::list_tags(&repo).unwrap_or_default();
 
     // Setup terminal
     enable_raw_mode()?;
@@ -31,7 +34,7 @@ fn main() -> Result<()> {
     let mut app = App::new(tags);
 
     // Run app
-    let res = run_app(&mut terminal, &mut app);
+    let res = run_app(&mut terminal, &mut app, &repo);
 
     // Restore terminal
     disable_raw_mode()?;
@@ -48,6 +51,7 @@ fn main() -> Result<()> {
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
+    repo: &Repository,
 ) -> Result<()> {
     loop {
         terminal.draw(|f| ui::render(f, app))?;
@@ -60,6 +64,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     KeyCode::Up | KeyCode::Char('k') => app.previous(),
                     KeyCode::Char('d') => app.sort_by_date(),
                     KeyCode::Char('s') => app.sort_by_semver(),
+                    KeyCode::Char('c') => app.toggle_compare(repo),
                     _ => {}
                 }
             }

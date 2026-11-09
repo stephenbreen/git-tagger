@@ -2,11 +2,14 @@
 name = "git-tagger"
 version = "0.1.0"
 edition = "2024"
+description = "A terminal UI for browsing git tags and the commits between them"
+license = "MIT"
+repository = "https://github.com/stephenbreen/git-tagger"
 
 [dependencies]
 ratatui = "0.26"
 crossterm = "0.27"
-git2 = "0.18"
+git2 = { version = "0.18", default-features = false }
 chrono = "0.4"
 semver = "1.0"
 color-eyre = "0.6"
